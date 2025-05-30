@@ -31,6 +31,11 @@ private:
     void updateVolumeText();
     void updateSoundVolume();
     void handleSliderDrag(float mouseX);
+    int getSegmentDirection(size_t index) const;
+    
+    // Nowe funkcje do obsługi tekstur
+    void loadTextures();
+    void setupSprites();
 
 private:
     int width = 800;
@@ -97,6 +102,34 @@ private:
     sf::Sound eatSound;
     sf::Sound deathSound;
     sf::Sound clickSound;
+
+    // Tekstury i sprite'y
+    sf::Texture topBarTexture;
+    sf::Texture buttonTexture;
+    sf::Texture foodTexture;
+    
+    sf::Sprite topBarSprite;
+    sf::Sprite foodSprite;
+
+    bool hasTopBarTexture;
+    bool hasButtonTexture;
+    bool hasFoodTexture;
+
+
+    sf::Texture snakeHeadUpTexture, snakeHeadDownTexture, snakeHeadLeftTexture, snakeHeadRightTexture;
+    sf::Texture snakeBodyHorizontalTexture, snakeBodyVerticalTexture;
+    sf::Texture snakeCornerUpLeftTexture, snakeCornerUpRightTexture, snakeCornerDownLeftTexture, snakeCornerDownRightTexture;
+
+    sf::Sprite snakeHeadUpSprite, snakeHeadDownSprite, snakeHeadLeftSprite, snakeHeadRightSprite;
+    sf::Sprite snakeBodyHorizontalSprite, snakeBodyVerticalSprite;
+    sf::Sprite snakeCornerUpLeftSprite, snakeCornerUpRightSprite, snakeCornerDownLeftSprite, snakeCornerDownRightSprite;
+
+    bool hasSnakeHeadTextures, hasSnakeBodyTextures, hasSnakeCornerTextures;
+
+    sf::Texture gridCellTexture;
+    sf::Sprite gridCellSprite;
+    bool hasGridCellTexture;
+
 };
 
 #endif

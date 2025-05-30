@@ -59,7 +59,110 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     volume = 50.0f; // Default volume 50%
     isDraggingSlider = false;
 
+    //Załaduj tekstury i ustaw sprite'y
+    loadTextures();
+    setupSprites();
     setupButtons();
+}
+
+
+//Konfiguracja textur
+void SnakeGame::loadTextures() {
+    // Reset flags
+    hasGridCellTexture = false;
+    hasTopBarTexture = false;
+    hasButtonTexture = false;
+    hasSnakeHeadTextures = false;
+    hasSnakeBodyTextures = false;
+    hasSnakeCornerTextures = false;
+    hasFoodTexture = false;
+
+    // Zaladuj basicowe tekstury
+    hasGridCellTexture = gridCellTexture.loadFromFile("textures/grid_cell.png");
+    hasTopBarTexture = topBarTexture.loadFromFile("textures/topbar.png");
+    hasButtonTexture = buttonTexture.loadFromFile("textures/button.png");
+    hasFoodTexture = foodTexture.loadFromFile("textures/food.png");
+
+    // Zaladuje tekstury wensza
+    hasSnakeHeadTextures = 
+        snakeHeadUpTexture.loadFromFile("textures/snake_head_up.png") &&
+        snakeHeadDownTexture.loadFromFile("textures/snake_head_down.png") &&
+        snakeHeadLeftTexture.loadFromFile("textures/snake_head_left.png") &&
+        snakeHeadRightTexture.loadFromFile("textures/snake_head_right.png");
+
+    hasSnakeBodyTextures =
+        snakeBodyHorizontalTexture.loadFromFile("textures/snake_body_horizontal.png") &&
+        snakeBodyVerticalTexture.loadFromFile("textures/snake_body_vertical.png");
+
+    hasSnakeCornerTextures =
+        snakeCornerUpLeftTexture.loadFromFile("textures/snake_corner_up_left.png") &&
+        snakeCornerUpRightTexture.loadFromFile("textures/snake_corner_up_right.png") &&
+        snakeCornerDownLeftTexture.loadFromFile("textures/snake_corner_down_left.png") &&
+        snakeCornerDownRightTexture.loadFromFile("textures/snake_corner_down_right.png");
+}
+
+//dodaj sprawdzanie flag przed ustawianiem tekstur
+void SnakeGame::setupSprites() {
+    if (hasGridCellTexture) {
+        gridCellSprite.setTexture(gridCellTexture);
+        gridCellSprite.setScale(
+            static_cast<float>(size) / gridCellTexture.getSize().x,
+            static_cast<float>(size) / gridCellTexture.getSize().y
+        );
+    }
+
+    if (hasTopBarTexture) {
+        topBarSprite.setTexture(topBarTexture);
+        sf::Vector2u textureSize = topBarTexture.getSize();
+        float scaleX = static_cast<float>(width) / textureSize.x;
+        float scaleY = static_cast<float>(offsetY) / textureSize.y;
+        topBarSprite.setScale(scaleX, scaleY);
+        topBarSprite.setPosition(0, 0);
+    }
+
+    if (hasFoodTexture) {
+        foodSprite.setTexture(foodTexture);
+        foodSprite.setScale(
+            static_cast<float>(size - 2) / foodTexture.getSize().x,
+            static_cast<float>(size - 2) / foodTexture.getSize().y
+        );
+    }
+
+    // Snake sprites
+    if (hasSnakeHeadTextures) {
+        snakeHeadUpSprite.setTexture(snakeHeadUpTexture);
+        snakeHeadDownSprite.setTexture(snakeHeadDownTexture);
+        snakeHeadLeftSprite.setTexture(snakeHeadLeftTexture);
+        snakeHeadRightSprite.setTexture(snakeHeadRightTexture);
+        
+        float scale = static_cast<float>(size - 2) / snakeHeadUpTexture.getSize().x;
+        snakeHeadUpSprite.setScale(scale, scale);
+        snakeHeadDownSprite.setScale(scale, scale);
+        snakeHeadLeftSprite.setScale(scale, scale);
+        snakeHeadRightSprite.setScale(scale, scale);
+    }
+
+    if (hasSnakeBodyTextures) {
+        snakeBodyHorizontalSprite.setTexture(snakeBodyHorizontalTexture);
+        snakeBodyVerticalSprite.setTexture(snakeBodyVerticalTexture);
+        
+        float scale = static_cast<float>(size - 2) / snakeBodyHorizontalTexture.getSize().x;
+        snakeBodyHorizontalSprite.setScale(scale, scale);
+        snakeBodyVerticalSprite.setScale(scale, scale);
+    }
+
+    if (hasSnakeCornerTextures) {
+        snakeCornerUpLeftSprite.setTexture(snakeCornerUpLeftTexture);
+        snakeCornerUpRightSprite.setTexture(snakeCornerUpRightTexture);
+        snakeCornerDownLeftSprite.setTexture(snakeCornerDownLeftTexture);
+        snakeCornerDownRightSprite.setTexture(snakeCornerDownRightTexture);
+        
+        float scale = static_cast<float>(size - 2) / snakeCornerUpLeftTexture.getSize().x;
+        snakeCornerUpLeftSprite.setScale(scale, scale);
+        snakeCornerUpRightSprite.setScale(scale, scale);
+        snakeCornerDownLeftSprite.setScale(scale, scale);
+        snakeCornerDownRightSprite.setScale(scale, scale);
+    }
 }
 
 void SnakeGame::setupButtons() {
@@ -69,7 +172,11 @@ void SnakeGame::setupButtons() {
     
     //startbutton
     startButton.setSize({200, 50});
-    startButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        startButton.setTexture(&buttonTexture);
+    } else {
+        startButton.setFillColor(sf::Color::Blue);
+    }
     startButton.setPosition(centerX - 100, centerY - 75);
     startText.setFont(font);
     startText.setCharacterSize(24);
@@ -79,7 +186,11 @@ void SnakeGame::setupButtons() {
 
     //settingsbutton
     settingsButton.setSize({200, 50});
-    settingsButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        settingsButton.setTexture(&buttonTexture);
+    } else {
+        settingsButton.setFillColor(sf::Color::Blue);
+    }
     settingsButton.setPosition(centerX - 100, centerY - 10);
     settingsText.setFont(font);
     settingsText.setCharacterSize(24);
@@ -89,7 +200,11 @@ void SnakeGame::setupButtons() {
 
     //exitbutton
     exitButton.setSize({200, 50});
-    exitButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        exitButton.setTexture(&buttonTexture);
+    } else {
+        exitButton.setFillColor(sf::Color::Blue);
+    }
     exitButton.setPosition(centerX - 100, centerY + 55);
     exitText.setFont(font);
     exitText.setCharacterSize(24);
@@ -99,7 +214,11 @@ void SnakeGame::setupButtons() {
 
     //restartbutton
     restartButton.setSize({200, 50});
-    restartButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        restartButton.setTexture(&buttonTexture);
+    } else {
+        restartButton.setFillColor(sf::Color::Blue);
+    }
     restartButton.setPosition(centerX - 100, centerY - 50);
     restartText.setFont(font);
     restartText.setCharacterSize(24);
@@ -109,7 +228,11 @@ void SnakeGame::setupButtons() {
 
     //backtomenubutton
     backToMenuButton.setSize({200, 50});
-    backToMenuButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        backToMenuButton.setTexture(&buttonTexture);
+    } else {
+        backToMenuButton.setFillColor(sf::Color::Blue);
+    }
     backToMenuButton.setPosition(centerX - 100, centerY + 20);
     backToMenuText.setFont(font);
     backToMenuText.setCharacterSize(24);
@@ -119,38 +242,54 @@ void SnakeGame::setupButtons() {
 
     //smallboardbutton
     smallBoardButton.setSize({200, 50});
-    smallBoardButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        smallBoardButton.setTexture(&buttonTexture);
+    } else {
+        smallBoardButton.setFillColor(sf::Color::Blue);
+    }
     smallBoardButton.setPosition(centerX - 100, centerY - 100);
     smallBoardText.setFont(font);
     smallBoardText.setCharacterSize(24);
-    smallBoardText.setString("Small (20x15)");
+    smallBoardText.setString("Small");
     smallBoardText.setFillColor(sf::Color::White);
     centerTextInButton(smallBoardText, smallBoardButton);
 
     //mediumboardbutton
     mediumBoardButton.setSize({200, 50});
-    mediumBoardButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        mediumBoardButton.setTexture(&buttonTexture);
+    } else {
+        mediumBoardButton.setFillColor(sf::Color::Blue);
+    }
     mediumBoardButton.setPosition(centerX - 100, centerY - 25);
     mediumBoardText.setFont(font);
     mediumBoardText.setCharacterSize(24);
-    mediumBoardText.setString("Medium (30x20)");
+    mediumBoardText.setString("Medium");
     mediumBoardText.setFillColor(sf::Color::White);
     centerTextInButton(mediumBoardText, mediumBoardButton);
 
     //largeboardbutton
     largeBoardButton.setSize({200, 50});
-    largeBoardButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        largeBoardButton.setTexture(&buttonTexture);
+    } else {
+        largeBoardButton.setFillColor(sf::Color::Blue);
+    }
     largeBoardButton.setPosition(centerX - 100, centerY + 50);
     largeBoardText.setFont(font);
     largeBoardText.setCharacterSize(24);
-    largeBoardText.setString("Large (40x30)");
+    largeBoardText.setString("Large");
     largeBoardText.setFillColor(sf::Color::White);
     centerTextInButton(largeBoardText, largeBoardButton);
 
     // Settings buttons
     //mutebutton
     muteButton.setSize({200, 50});
-    muteButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        muteButton.setTexture(&buttonTexture);
+    } else {
+        muteButton.setFillColor(sf::Color::Blue);
+    }
     muteButton.setPosition(centerX - 100, centerY - 100);
     muteText.setFont(font);
     muteText.setCharacterSize(24);
@@ -174,7 +313,11 @@ void SnakeGame::setupButtons() {
 
     //back from settings button
     backFromSettingsButton.setSize({200, 50});
-    backFromSettingsButton.setFillColor(sf::Color::Blue);
+    if (hasButtonTexture) {
+        backFromSettingsButton.setTexture(&buttonTexture);
+    } else {
+        backFromSettingsButton.setFillColor(sf::Color::Blue);
+    }
     backFromSettingsButton.setPosition(centerX - 100, centerY + 50);
     backFromSettingsText.setFont(font);
     backFromSettingsText.setCharacterSize(24);
@@ -390,30 +533,128 @@ void SnakeGame::update() {
 
 //rysowanie menu i gry
 void SnakeGame::draw() {
-    //glowne okno
+    //glowne okno - tło
     window.clear(sf::Color::Black);
 
+
+    if (hasGridCellTexture) {
+        for (int x = 0; x < cols; x++) {
+            for (int y = 0; y < rows; y++) {
+                gridCellSprite.setPosition(x * size, y * size + offsetY);
+                window.draw(gridCellSprite);
+            }
+        }
+    } else {
+        // Alternatywne tło (prostokąty z obramowaniem)
+        for (int x = 0; x < cols; x++) {
+            for (int y = 0; y < rows; y++) {
+                sf::RectangleShape cell(sf::Vector2f(size, size));
+                cell.setFillColor(sf::Color(30, 30, 30));
+                cell.setOutlineColor(sf::Color(50, 50, 50));
+                cell.setOutlineThickness(1);
+                cell.setPosition(x * size, y * size + offsetY);
+                window.draw(cell);
+            }
+        }
+    }
+
+    if (state != GameState::Playing) {
+        sf::RectangleShape overlay(sf::Vector2f(width, height));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150)); // Czarny z przezroczystością
+        window.draw(overlay);
+    }
+
+
     //menu na gorze na score i highscore
-    sf::RectangleShape topBar(sf::Vector2f(width, offsetY));
-    topBar.setFillColor(sf::Color(50, 50, 50));
-    window.draw(topBar);
+    if (hasTopBarTexture) {
+        window.draw(topBarSprite);
+    } else {
+        sf::RectangleShape topBar(sf::Vector2f(width, offsetY));
+        topBar.setFillColor(sf::Color(50, 50, 50));
+        window.draw(topBar);
+    }
 
     //czensci wenza
     if (state == GameState::Playing){
-        sf::RectangleShape segmentShape(sf::Vector2f(size - 2, size - 2));
-        segmentShape.setFillColor(sf::Color::Green);
-        for (const auto& segment : snake) {
-            segmentShape.setPosition(segment.x * size, segment.y * size + offsetY);
+        // W sekcji rysowania węża, zastąp całą pętlę for:
+for (size_t i = 0; i < snake.size(); ++i) {
+    const auto& segment = snake[i];
+    sf::Vector2f position(segment.x * size, segment.y * size + offsetY);
+    
+    if (i == 0) { // Głowa
+        if (hasSnakeHeadTextures) {
+            sf::Sprite* headSprite = nullptr;
+            switch (direction) {
+                case 0: headSprite = &snakeHeadUpSprite; break;
+                case 1: headSprite = &snakeHeadRightSprite; break;
+                case 2: headSprite = &snakeHeadDownSprite; break;
+                case 3: headSprite = &snakeHeadLeftSprite; break;
+            }
+            if (headSprite) {
+                headSprite->setPosition(position);
+                window.draw(*headSprite);
+            }
+        } else {
+            sf::RectangleShape segmentShape(sf::Vector2f(size - 2, size - 2));
+            segmentShape.setFillColor(sf::Color::Green);
+            segmentShape.setPosition(position);
             window.draw(segmentShape);
         }
+    } else { // Ciało
+        // Sprawdź czy to skręt
+        bool isCorner = false;
+        sf::Sprite* cornerSprite = nullptr;
+        
+        if (i < snake.size() - 1) {
+            int prevDir = getSegmentDirection(i - 1);
+            int nextDir = getSegmentDirection(i + 1);
+            
+            if (prevDir != nextDir && prevDir != -1 && nextDir != -1) {
+                isCorner = true;
+                
+                // Określ typ skrętu
+                if ((prevDir == 0 && nextDir == 1) || (prevDir == 3 && nextDir == 2)) {
+                    cornerSprite = &snakeCornerUpRightSprite;
+                } else if ((prevDir == 0 && nextDir == 3) || (prevDir == 1 && nextDir == 2)) {
+                    cornerSprite = &snakeCornerUpLeftSprite;
+                } else if ((prevDir == 2 && nextDir == 1) || (prevDir == 3 && nextDir == 0)) {
+                    cornerSprite = &snakeCornerDownRightSprite;
+                } else if ((prevDir == 2 && nextDir == 3) || (prevDir == 1 && nextDir == 0)) {
+                    cornerSprite = &snakeCornerDownLeftSprite;
+                }
+            }
+        }
+        
+        if (isCorner && hasSnakeCornerTextures && cornerSprite) {
+            cornerSprite->setPosition(position);
+            window.draw(*cornerSprite);
+        } else if (hasSnakeBodyTextures) {
+            int segDir = getSegmentDirection(i);
+            sf::Sprite* bodySprite = (segDir == 1 || segDir == 3) ? 
+                                   &snakeBodyHorizontalSprite : &snakeBodyVerticalSprite;
+            bodySprite->setPosition(position);
+            window.draw(*bodySprite);
+        } else {
+            sf::RectangleShape segmentShape(sf::Vector2f(size - 2, size - 2));
+            segmentShape.setFillColor(sf::Color::Green);
+            segmentShape.setPosition(position);
+            window.draw(segmentShape);
+        }
+    }
+}
     }
 
     //jedzenie
     if (state == GameState::Playing) {
-        sf::RectangleShape foodShape(sf::Vector2f(size - 2, size - 2));
-        foodShape.setFillColor(sf::Color::Red);
-        foodShape.setPosition(food.x * size, food.y * size + offsetY);
-        window.draw(foodShape);
+        if (hasFoodTexture) {
+            foodSprite.setPosition(food.x * size, food.y * size + offsetY);
+            window.draw(foodSprite);
+        } else {
+            sf::RectangleShape foodShape(sf::Vector2f(size - 2, size - 2));
+            foodShape.setFillColor(sf::Color::Red);
+            foodShape.setPosition(food.x * size, food.y * size + offsetY);
+            window.draw(foodShape);
+        }
     }
 
     //menu i menu po smierci
@@ -517,15 +758,15 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     // Aktualizuj okno bez zmiany jego rozmiaru
     // window.create(sf::VideoMode(width, height), "Snake");
     
+    // Przeładuj sprite'y dla nowego rozmiaru
+    setupSprites();
+    
     // Aktualizuj pozycje guzików dla nowego rozmiaru
     setupButtons();
     
     // Zresetuj grę z nowymi wymiarami
     resetGame();
 }       
-
-
-
 
 void SnakeGame::updateVolumeText() {
     muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
@@ -557,4 +798,24 @@ void SnakeGame::handleSliderDrag(float mouseX) {
     
     updateVolumeText();
     updateSoundVolume();
+}
+
+int SnakeGame::getSegmentDirection(size_t index) const {
+    if (index >= snake.size()) return -1;
+    
+    if (index == 0) {
+        // Głowa - zwróć aktualny kierunek
+        return direction;
+    }
+    
+    // Dla segmentów ciała - kierunek od poprzedniego do aktualnego
+    const auto& current = snake[index];
+    const auto& previous = snake[index - 1];
+    
+    if (previous.x < current.x) return 1; // w prawo
+    if (previous.x > current.x) return 3; // w lewo
+    if (previous.y < current.y) return 2; // w dół
+    if (previous.y > current.y) return 0; // w górę
+    
+    return -1;
 }
