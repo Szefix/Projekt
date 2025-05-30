@@ -54,6 +54,11 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
 
     state = GameState::Menu;
 
+    // Settings initialization
+    isMuted = false;
+    volume = 50.0f; // Default volume 50%
+    isDraggingSlider = false;
+
     setupButtons();
 }
 
@@ -65,17 +70,27 @@ void SnakeGame::setupButtons() {
     //startbutton
     startButton.setSize({200, 50});
     startButton.setFillColor(sf::Color::Blue);
-    startButton.setPosition(centerX - 100, centerY - 50);
+    startButton.setPosition(centerX - 100, centerY - 75);
     startText.setFont(font);
     startText.setCharacterSize(24);
     startText.setString("Zacznij gre");
     startText.setFillColor(sf::Color::White);
     centerTextInButton(startText, startButton);
 
+    //settingsbutton
+    settingsButton.setSize({200, 50});
+    settingsButton.setFillColor(sf::Color::Blue);
+    settingsButton.setPosition(centerX - 100, centerY - 10);
+    settingsText.setFont(font);
+    settingsText.setCharacterSize(24);
+    settingsText.setString("Ustawienia");
+    settingsText.setFillColor(sf::Color::White);
+    centerTextInButton(settingsText, settingsButton);
+
     //exitbutton
     exitButton.setSize({200, 50});
     exitButton.setFillColor(sf::Color::Blue);
-    exitButton.setPosition(centerX - 100, centerY + 20);
+    exitButton.setPosition(centerX - 100, centerY + 55);
     exitText.setFont(font);
     exitText.setCharacterSize(24);
     exitText.setString("Wyjdz");
@@ -131,6 +146,44 @@ void SnakeGame::setupButtons() {
     largeBoardText.setString("Large (40x30)");
     largeBoardText.setFillColor(sf::Color::White);
     centerTextInButton(largeBoardText, largeBoardButton);
+
+    // Settings buttons
+    //mutebutton
+    muteButton.setSize({200, 50});
+    muteButton.setFillColor(sf::Color::Blue);
+    muteButton.setPosition(centerX - 100, centerY - 100);
+    muteText.setFont(font);
+    muteText.setCharacterSize(24);
+    muteText.setFillColor(sf::Color::White);
+    centerTextInButton(muteText, muteButton);
+
+    //volume slider background
+    volumeSliderBg.setSize({300, 20});
+    volumeSliderBg.setFillColor(sf::Color(100, 100, 100));
+    volumeSliderBg.setPosition(centerX - 150, centerY - 10);
+
+    //volume slider handle
+    volumeSliderHandle.setSize({20, 30});
+    volumeSliderHandle.setFillColor(sf::Color::White);
+    
+    //volume text
+    volumeText.setFont(font);
+    volumeText.setCharacterSize(20);
+    volumeText.setFillColor(sf::Color::White);
+    volumeText.setPosition(centerX - 50, centerY - 50);
+
+    //back from settings button
+    backFromSettingsButton.setSize({200, 50});
+    backFromSettingsButton.setFillColor(sf::Color::Blue);
+    backFromSettingsButton.setPosition(centerX - 100, centerY + 50);
+    backFromSettingsText.setFont(font);
+    backFromSettingsText.setCharacterSize(24);
+    backFromSettingsText.setString("Powrot");
+    backFromSettingsText.setFillColor(sf::Color::White);
+    centerTextInButton(backFromSettingsText, backFromSettingsButton);
+
+    updateVolumeText();
+    updateSoundVolume();
 }
 
 void SnakeGame::centerTextInButton(sf::Text& text, const sf::RectangleShape& button) {
@@ -212,6 +265,10 @@ void SnakeGame::processEvents() {
                     clickSound.play();
                     state = GameState::BoardSizeSelection;
                 }
+                else if (settingsButton.getGlobalBounds().contains(mousePos)) {
+                    clickSound.play();
+                    state = GameState::Settings;
+                }
                 else if (exitButton.getGlobalBounds().contains(mousePos)) {
                     window.close();
                 }
@@ -245,6 +302,33 @@ void SnakeGame::processEvents() {
                     state = GameState::Playing;
                 }
             }
+            else if (state == GameState::Settings) {
+                if (muteButton.getGlobalBounds().contains(mousePos)) {
+                    clickSound.play();
+                    isMuted = !isMuted;
+                    updateVolumeText();
+                    updateSoundVolume();
+                }
+                else if (backFromSettingsButton.getGlobalBounds().contains(mousePos)) {
+                    clickSound.play();
+                    state = GameState::Menu;
+                }
+                else if (volumeSliderBg.getGlobalBounds().contains(mousePos) || 
+                         volumeSliderHandle.getGlobalBounds().contains(mousePos)) {
+                    isDraggingSlider = true;
+                    handleSliderDrag(mousePos.x);
+                }
+            }
+        }
+
+        // Handle mouse button release
+        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+            isDraggingSlider = false;
+        }
+
+        // Handle mouse movement for slider dragging
+        if (event.type == sf::Event::MouseMoved && isDraggingSlider && state == GameState::Settings) {
+            handleSliderDrag(static_cast<float>(event.mouseMove.x));
         }
     }
 }
@@ -336,8 +420,19 @@ void SnakeGame::draw() {
     if (state == GameState::Menu) {
         window.draw(startButton);
         window.draw(startText);
+        window.draw(settingsButton);
+        window.draw(settingsText);
         window.draw(exitButton);
         window.draw(exitText);
+    }
+    else if (state == GameState::Settings) {
+        window.draw(muteButton);
+        window.draw(muteText);
+        window.draw(volumeSliderBg);
+        window.draw(volumeSliderHandle);
+        window.draw(volumeText);
+        window.draw(backFromSettingsButton);
+        window.draw(backFromSettingsText);
     }
     else if (state == GameState::GameOver) {
         window.draw(restartButton);
@@ -427,4 +522,39 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     
     // Zresetuj grę z nowymi wymiarami
     resetGame();
+}       
+
+
+
+
+void SnakeGame::updateVolumeText() {
+    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
+    centerTextInButton(muteText, muteButton);
+    
+    volumeText.setString("Glosnosc: " + std::to_string(static_cast<int>(volume)) + "%");
+    
+    // Update slider handle position
+    float sliderProgress = volume / 100.0f;
+    float handleX = volumeSliderBg.getPosition().x + (volumeSliderBg.getSize().x - volumeSliderHandle.getSize().x) * sliderProgress;
+    volumeSliderHandle.setPosition(handleX, volumeSliderBg.getPosition().y - 5);
+}
+
+void SnakeGame::updateSoundVolume() {
+    float actualVolume = isMuted ? 0.0f : volume;
+    eatSound.setVolume(actualVolume);
+    deathSound.setVolume(actualVolume);
+}
+
+void SnakeGame::handleSliderDrag(float mouseX) {
+    float sliderLeft = volumeSliderBg.getPosition().x;
+    float sliderRight = sliderLeft + volumeSliderBg.getSize().x;
+    
+    if (mouseX < sliderLeft) mouseX = sliderLeft;
+    if (mouseX > sliderRight) mouseX = sliderRight;
+    
+    float progress = (mouseX - sliderLeft) / volumeSliderBg.getSize().x;
+    volume = progress * 100.0f;
+    
+    updateVolumeText();
+    updateSoundVolume();
 }

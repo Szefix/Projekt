@@ -28,6 +28,9 @@ private:
     void setBoardSize(int newCols, int newRows);
     void setupButtons();
     void centerTextInButton(sf::Text& text, const sf::RectangleShape& button);
+    void updateVolumeText();
+    void updateSoundVolume();
+    void handleSliderDrag(float mouseX);
 
 private:
     int width = 800;
@@ -54,14 +57,17 @@ private:
 
     enum class GameState {
         Menu,
+        Settings,
         BoardSizeSelection,
-        Playing,
+        Playing,  
         GameOver
     };
     GameState state;
 
     sf::RectangleShape startButton;
     sf::Text startText;
+    sf::RectangleShape settingsButton;
+    sf::Text settingsText;
     sf::RectangleShape exitButton;
     sf::Text exitText;
     sf::RectangleShape restartButton;
@@ -70,6 +76,19 @@ private:
     sf::Text backToMenuText;
     sf::RectangleShape smallBoardButton, mediumBoardButton, largeBoardButton;
     sf::Text smallBoardText, mediumBoardText, largeBoardText;
+
+    // Settings elements
+    sf::RectangleShape muteButton;
+    sf::Text muteText;
+    sf::RectangleShape volumeSliderBg;
+    sf::RectangleShape volumeSliderHandle;
+    sf::Text volumeText;
+    sf::RectangleShape backFromSettingsButton;
+    sf::Text backFromSettingsText;
+
+    bool isMuted;
+    float volume; // 0.0f to 100.0f
+    bool isDraggingSlider;
 
     sf::SoundBuffer eatBuffer;
     sf::SoundBuffer deathBuffer;
