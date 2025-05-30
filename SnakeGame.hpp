@@ -28,9 +28,6 @@ private:
     void setBoardSize(int newCols, int newRows);
     void setupButtons();
     void centerTextInButton(sf::Text& text, const sf::RectangleShape& button);
-    void updateVolumeText();
-    void updateSoundVolume();
-    void handleSliderDrag(float mouseX);
     int getSegmentDirection(size_t index) const;
     
     // Nowe funkcje do obsługi tekstur
@@ -59,6 +56,7 @@ private:
     int score;
     sf::Font font;
     sf::Text scoreText;
+    sf::Text volumeText;
 
     enum class GameState {
         Menu,
@@ -85,15 +83,10 @@ private:
     // Settings elements
     sf::RectangleShape muteButton;
     sf::Text muteText;
-    sf::RectangleShape volumeSliderBg;
-    sf::RectangleShape volumeSliderHandle;
-    sf::Text volumeText;
     sf::RectangleShape backFromSettingsButton;
     sf::Text backFromSettingsText;
 
     bool isMuted;
-    float volume; // 0.0f to 100.0f
-    bool isDraggingSlider;
 
     sf::SoundBuffer eatBuffer;
     sf::SoundBuffer deathBuffer;

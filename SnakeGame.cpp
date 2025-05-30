@@ -27,6 +27,9 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     highScore = 0;
     loadHighScore();
 
+    window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(60);
+
     //dzwieki 
     if (!eatBuffer.loadFromFile("sounds/eat.wav"))
         std::cerr << "Nie mogę załadować eat.wav\n";
@@ -56,8 +59,9 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
 
     // Settings initialization
     isMuted = false;
-    volume = 50.0f; // Default volume 50%
-    isDraggingSlider = false;
+    eatSound.setVolume(100); // 100% głośności domyślnie
+    deathSound.setVolume(100);
+    clickSound.setVolume(100);
 
     //Załaduj tekstury i ustaw sprite'y
     loadTextures();
@@ -290,21 +294,13 @@ void SnakeGame::setupButtons() {
     } else {
         muteButton.setFillColor(sf::Color::Blue);
     }
-    muteButton.setPosition(centerX - 100, centerY - 100);
+    muteButton.setPosition(centerX - 100, centerY - 50);
     muteText.setFont(font);
     muteText.setCharacterSize(24);
     muteText.setFillColor(sf::Color::White);
+    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
     centerTextInButton(muteText, muteButton);
 
-    //volume slider background
-    volumeSliderBg.setSize({300, 20});
-    volumeSliderBg.setFillColor(sf::Color(100, 100, 100));
-    volumeSliderBg.setPosition(centerX - 150, centerY - 10);
-
-    //volume slider handle
-    volumeSliderHandle.setSize({20, 30});
-    volumeSliderHandle.setFillColor(sf::Color::White);
-    
     //volume text
     volumeText.setFont(font);
     volumeText.setCharacterSize(20);
@@ -324,9 +320,6 @@ void SnakeGame::setupButtons() {
     backFromSettingsText.setString("Powrot");
     backFromSettingsText.setFillColor(sf::Color::White);
     centerTextInButton(backFromSettingsText, backFromSettingsButton);
-
-    updateVolumeText();
-    updateSoundVolume();
 }
 
 void SnakeGame::centerTextInButton(sf::Text& text, const sf::RectangleShape& button) {
@@ -338,12 +331,25 @@ void SnakeGame::centerTextInButton(sf::Text& text, const sf::RectangleShape& but
 
 //glowna petla - odpowiada za uruchomienie gry
 void SnakeGame::run() {
+    sf::Clock clock;
+    const float frameTime = 1.0f / 60.0f; // 60 aktualizacji na sekundę
+    float accumulatedTime = 0.0f;
+
     while (window.isOpen()) {
+        float deltaTime = clock.restart().asSeconds();
+        accumulatedTime += deltaTime;
+
         processEvents();
-        if (state == GameState::Playing) {
-            update();
+
+        // Aktualizuj grę w stałych odstępach czasu
+        while (accumulatedTime >= frameTime) {
+            accumulatedTime -= frameTime;
+            if (state == GameState::Playing) {
+                update();
+            }
         }
-        draw();
+
+        draw(); // Renderuj tak często, jak to możliwe
     }
 }
 
@@ -449,29 +455,19 @@ void SnakeGame::processEvents() {
                 if (muteButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     isMuted = !isMuted;
-                    updateVolumeText();
-                    updateSoundVolume();
+                    // Ustaw głośność na 0% lub 100%
+                    float volume = isMuted ? 0.0f : 100.0f;
+                    eatSound.setVolume(volume);
+                    deathSound.setVolume(volume); 
+                    clickSound.setVolume(volume);
+                    muteText.setString(isMuted ? "Dźwięk: OFF" : "Dźwięk: ON");
+                    centerTextInButton(muteText, muteButton); // Odśwież tekst
                 }
                 else if (backFromSettingsButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     state = GameState::Menu;
                 }
-                else if (volumeSliderBg.getGlobalBounds().contains(mousePos) || 
-                         volumeSliderHandle.getGlobalBounds().contains(mousePos)) {
-                    isDraggingSlider = true;
-                    handleSliderDrag(mousePos.x);
-                }
             }
-        }
-
-        // Handle mouse button release
-        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
-            isDraggingSlider = false;
-        }
-
-        // Handle mouse movement for slider dragging
-        if (event.type == sf::Event::MouseMoved && isDraggingSlider && state == GameState::Settings) {
-            handleSliderDrag(static_cast<float>(event.mouseMove.x));
         }
     }
 }
@@ -483,43 +479,10 @@ void SnakeGame::updateScoreText() {
 
 //aktualizowanie co robi waz
 void SnakeGame::update() {
-    
-    // nie aktualizuj, jesli gra skonczona
-    directionChanged = false;
-    SnakeSegment head = snake.front();
+    static sf::Clock moveClock;
+    const float moveInterval = 0.1f; // Czas między ruchami (sekundy)
 
-    //poruszanie sie po planszy x.y
-    switch (direction) {
-        case 0: head.y--; break;
-        case 1: head.x++; break;
-        case 2: head.y++; break;
-        case 3: head.x--; break;
-    }
-
-    //czy uderza glowa w krawedzie
-    if (head.x < 0 || head.y < 0 || head.x >= cols || head.y >= rows)
-        gameOver = true;
-
-    //czy uderza glowa w siebie
-    for (const auto& segment : snake) {
-        if (segment.x == head.x && segment.y == head.y)
-            gameOver = true;
-    }
-
-    snake.insert(snake.begin(), head);
-
-    //czy wszedl na owoc i go zjadl
-    if (head.x == food.x && head.y == food.y) {
-        score++;
-        eatSound.play();
-        updateScoreText();
-        spawnFood();
-    }
-    else {
-        snake.pop_back();
-    }
-
-    //ponowne sprawdzanie kolizji
+    // Sprawdzaj kolizje CAŁY CZAS, nawet gdy wąż się nie porusza
     if (checkCollision()) {
         deathSound.play();
         if (score > highScore) {
@@ -528,6 +491,33 @@ void SnakeGame::update() {
             saveHighScore();
         }
         state = GameState::GameOver;
+        return; // Zakończ aktualizację, jeśli gra się skończyła
+    }
+
+    // Ruch węża tylko co określony czas
+    if (moveClock.getElapsedTime().asSeconds() >= moveInterval) {
+        moveClock.restart();
+
+        directionChanged = false;
+        SnakeSegment head = snake.front();
+
+        switch (direction) {
+            case 0: head.y--; break;
+            case 1: head.x++; break;
+            case 2: head.y++; break;
+            case 3: head.x--; break;
+        }
+
+        snake.insert(snake.begin(), head);
+
+        if (head.x == food.x && head.y == food.y) {
+            score++;
+            eatSound.play();
+            updateScoreText();
+            spawnFood();
+        } else {
+            snake.pop_back();
+        }
     }
 }
 
@@ -669,9 +659,6 @@ void SnakeGame::draw() {
     else if (state == GameState::Settings) {
         window.draw(muteButton);
         window.draw(muteText);
-        window.draw(volumeSliderBg);
-        window.draw(volumeSliderHandle);
-        window.draw(volumeText);
         window.draw(backFromSettingsButton);
         window.draw(backFromSettingsText);
     }
@@ -767,38 +754,6 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     // Zresetuj grę z nowymi wymiarami
     resetGame();
 }       
-
-void SnakeGame::updateVolumeText() {
-    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
-    centerTextInButton(muteText, muteButton);
-    
-    volumeText.setString("Glosnosc: " + std::to_string(static_cast<int>(volume)) + "%");
-    
-    // Update slider handle position
-    float sliderProgress = volume / 100.0f;
-    float handleX = volumeSliderBg.getPosition().x + (volumeSliderBg.getSize().x - volumeSliderHandle.getSize().x) * sliderProgress;
-    volumeSliderHandle.setPosition(handleX, volumeSliderBg.getPosition().y - 5);
-}
-
-void SnakeGame::updateSoundVolume() {
-    float actualVolume = isMuted ? 0.0f : volume;
-    eatSound.setVolume(actualVolume);
-    deathSound.setVolume(actualVolume);
-}
-
-void SnakeGame::handleSliderDrag(float mouseX) {
-    float sliderLeft = volumeSliderBg.getPosition().x;
-    float sliderRight = sliderLeft + volumeSliderBg.getSize().x;
-    
-    if (mouseX < sliderLeft) mouseX = sliderLeft;
-    if (mouseX > sliderRight) mouseX = sliderRight;
-    
-    float progress = (mouseX - sliderLeft) / volumeSliderBg.getSize().x;
-    volume = progress * 100.0f;
-    
-    updateVolumeText();
-    updateSoundVolume();
-}
 
 int SnakeGame::getSegmentDirection(size_t index) const {
     if (index >= snake.size()) return -1;
