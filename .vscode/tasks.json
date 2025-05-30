@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build snake",
+      "type": "shell",
+      "command": "g++.exe",
+      "args": [
+        "main.cpp",
+        "SnakeGame.cpp",
+        "SnakeSegment.cpp",
+        "-o",
+        "snake.exe",
+        "-IC:/msys64/mingw64/include",
+        "-LC:/msys64/mingw64/lib",
+        "-lsfml-graphics",
+        "-lsfml-window",
+        "-lsfml-system",
+        "-lsfml-audio",
+        "-mwindows"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
