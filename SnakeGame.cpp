@@ -558,12 +558,6 @@ void SnakeGame::draw() {
         }
     }
 
-    if (state != GameState::Playing) {
-        sf::RectangleShape overlay(sf::Vector2f(width, height));
-        overlay.setFillColor(sf::Color(0, 0, 0, 150)); // Czarny z przezroczystością
-        window.draw(overlay);
-    }
-
 
     //menu na gorze na score i highscore
     if (hasTopBarTexture) {
@@ -574,10 +568,16 @@ void SnakeGame::draw() {
         window.draw(topBar);
     }
 
+    if (state != GameState::Playing) {
+        sf::RectangleShape overlay(sf::Vector2f(width, height));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150)); // Czarny z 60% przezroczystością
+        window.draw(overlay);
+    }
+
     //czensci wenza
     if (state == GameState::Playing){
         // W sekcji rysowania węża, zastąp całą pętlę for:
-for (size_t i = 0; i < snake.size(); ++i) {
+    for (size_t i = 0; i < snake.size(); ++i) {
     const auto& segment = snake[i];
     sf::Vector2f position(segment.x * size, segment.y * size + offsetY);
     
