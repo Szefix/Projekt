@@ -20,6 +20,9 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     if (!font.loadFromFile("arial.ttf")) {
     }
 
+    currentSkinId = 0;
+    loadSkinsModule();
+
     maxRows = (height - offsetY) / size;
     cols = width / size;
     rows = maxRows;
@@ -174,6 +177,11 @@ void SnakeGame::setupButtons() {
     float centerX = width / 2.0f;
     float centerY = height / 2.0f;
     
+    // Menu główne - 4 przyciski (Start, Settings, Skins, Exit)
+    float buttonSpacing = 65.0f; // Odstęp między przyciskami
+    float totalHeight = 3 * buttonSpacing; // Wysokość dla 4 przycisków
+    float startY = centerY - (totalHeight / 2.0f);
+    
     //startbutton
     startButton.setSize({200, 50});
     if (hasButtonTexture) {
@@ -181,7 +189,7 @@ void SnakeGame::setupButtons() {
     } else {
         startButton.setFillColor(sf::Color::Blue);
     }
-    startButton.setPosition(centerX - 100, centerY - 75);
+    startButton.setPosition(centerX - 100, startY);
     startText.setFont(font);
     startText.setCharacterSize(24);
     startText.setString("Zacznij gre");
@@ -195,12 +203,26 @@ void SnakeGame::setupButtons() {
     } else {
         settingsButton.setFillColor(sf::Color::Blue);
     }
-    settingsButton.setPosition(centerX - 100, centerY - 10);
+    settingsButton.setPosition(centerX - 100, startY + buttonSpacing);
     settingsText.setFont(font);
     settingsText.setCharacterSize(24);
     settingsText.setString("Ustawienia");
     settingsText.setFillColor(sf::Color::White);
     centerTextInButton(settingsText, settingsButton);
+
+    //skinsbutton
+    skinsButton.setSize({200, 50});
+    if (hasButtonTexture) {
+        skinsButton.setTexture(&buttonTexture);
+    } else {
+        skinsButton.setFillColor(sf::Color::Blue);
+    }
+    skinsButton.setPosition(centerX - 100, startY + 2 * buttonSpacing);
+    skinsText.setFont(font);
+    skinsText.setCharacterSize(24);
+    skinsText.setString("Skorki");
+    skinsText.setFillColor(sf::Color::White);
+    centerTextInButton(skinsText, skinsButton);
 
     //exitbutton
     exitButton.setSize({200, 50});
@@ -209,13 +231,45 @@ void SnakeGame::setupButtons() {
     } else {
         exitButton.setFillColor(sf::Color::Blue);
     }
-    exitButton.setPosition(centerX - 100, centerY + 55);
+    exitButton.setPosition(centerX - 100, startY + 3 * buttonSpacing);
     exitText.setFont(font);
     exitText.setCharacterSize(24);
     exitText.setString("Wyjdz");
     exitText.setFillColor(sf::Color::White);
     centerTextInButton(exitText, exitButton);
 
+    // Menu ustawień - 3 przyciski (Mute, Skins, Back)
+    float settingsStartY = centerY - buttonSpacing;
+    
+    //mutebutton
+    muteButton.setSize({200, 50});
+    if (hasButtonTexture) {
+        muteButton.setTexture(&buttonTexture);
+    } else {
+        muteButton.setFillColor(sf::Color::Blue);
+    }
+    muteButton.setPosition(centerX - 100, settingsStartY);
+    muteText.setFont(font);
+    muteText.setCharacterSize(24);
+    muteText.setFillColor(sf::Color::White);
+    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
+    centerTextInButton(muteText, muteButton);
+
+    //back from settings button
+    backFromSettingsButton.setSize({200, 50});
+    if (hasButtonTexture) {
+        backFromSettingsButton.setTexture(&buttonTexture);
+    } else {
+        backFromSettingsButton.setFillColor(sf::Color::Blue);
+    }
+    backFromSettingsButton.setPosition(centerX - 100, settingsStartY + buttonSpacing);
+    backFromSettingsText.setFont(font);
+    backFromSettingsText.setCharacterSize(24);
+    backFromSettingsText.setString("Powrot");
+    backFromSettingsText.setFillColor(sf::Color::White);
+    centerTextInButton(backFromSettingsText, backFromSettingsButton);
+
+    // Pozostałe przyciski bez zmian...
     //restartbutton
     restartButton.setSize({200, 50});
     if (hasButtonTexture) {
@@ -286,40 +340,77 @@ void SnakeGame::setupButtons() {
     largeBoardText.setFillColor(sf::Color::White);
     centerTextInButton(largeBoardText, largeBoardButton);
 
-    // Settings buttons
-    //mutebutton
-    muteButton.setSize({200, 50});
-    if (hasButtonTexture) {
-        muteButton.setTexture(&buttonTexture);
-    } else {
-        muteButton.setFillColor(sf::Color::Blue);
-    }
-    muteButton.setPosition(centerX - 100, centerY - 50);
-    muteText.setFont(font);
-    muteText.setCharacterSize(24);
-    muteText.setFillColor(sf::Color::White);
-    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
-    centerTextInButton(muteText, muteButton);
-
     //volume text
     volumeText.setFont(font);
     volumeText.setCharacterSize(20);
     volumeText.setFillColor(sf::Color::White);
     volumeText.setPosition(centerX - 50, centerY - 50);
 
-    //back from settings button
-    backFromSettingsButton.setSize({200, 50});
+    // Guziki dla wyboru skórek
+    skin1Button.setSize({180, 50});
     if (hasButtonTexture) {
-        backFromSettingsButton.setTexture(&buttonTexture);
+        skin1Button.setTexture(&buttonTexture);
     } else {
-        backFromSettingsButton.setFillColor(sf::Color::Blue);
+        skin1Button.setFillColor(sf::Color::Blue);
     }
-    backFromSettingsButton.setPosition(centerX - 100, centerY + 50);
-    backFromSettingsText.setFont(font);
-    backFromSettingsText.setCharacterSize(24);
-    backFromSettingsText.setString("Powrot");
-    backFromSettingsText.setFillColor(sf::Color::White);
-    centerTextInButton(backFromSettingsText, backFromSettingsButton);
+    skin1Button.setPosition(centerX - 90, centerY - 100);
+    skin1Text.setFont(font);
+    skin1Text.setCharacterSize(20);
+    skin1Text.setString("Classic");
+    skin1Text.setFillColor(sf::Color::White);
+    centerTextInButton(skin1Text, skin1Button);
+
+    skin2Button.setSize({180, 50});
+    if (hasButtonTexture) {
+        skin2Button.setTexture(&buttonTexture);
+    } else {
+        skin2Button.setFillColor(sf::Color::Blue);
+    }
+    skin2Button.setPosition(centerX - 90, centerY - 40);
+    skin2Text.setFont(font);
+    skin2Text.setCharacterSize(20);
+    skin2Text.setString("Golden (50)");
+    skin2Text.setFillColor(sf::Color::White);
+    centerTextInButton(skin2Text, skin2Button);
+
+    skin3Button.setSize({180, 50});
+    if (hasButtonTexture) {
+        skin3Button.setTexture(&buttonTexture);
+    } else {
+        skin3Button.setFillColor(sf::Color::Blue);
+    }
+    skin3Button.setPosition(centerX - 90, centerY + 20);
+    skin3Text.setFont(font);
+    skin3Text.setCharacterSize(20);
+    skin3Text.setString("Rainbow (100)");
+    skin3Text.setFillColor(sf::Color::White);
+    centerTextInButton(skin3Text, skin3Button);
+
+    skin4Button.setSize({180, 50});
+    if (hasButtonTexture) {
+        skin4Button.setTexture(&buttonTexture);
+    } else {
+        skin4Button.setFillColor(sf::Color::Blue);
+    }
+    skin4Button.setPosition(centerX - 90, centerY + 80);
+    skin4Text.setFont(font);
+    skin4Text.setCharacterSize(20);
+    skin4Text.setString("Legendary (200)");
+    skin4Text.setFillColor(sf::Color::White);
+    centerTextInButton(skin4Text, skin4Button);
+
+    backFromSkinsButton.setSize({200, 50});
+    if (hasButtonTexture) {
+        backFromSkinsButton.setTexture(&buttonTexture);
+    } else {
+        backFromSkinsButton.setFillColor(sf::Color::Blue);
+    }
+    backFromSkinsButton.setPosition(centerX - 100, centerY + 140);
+    backFromSkinsText.setFont(font);
+    backFromSkinsText.setCharacterSize(24);
+    backFromSkinsText.setString("Powrot");
+    backFromSkinsText.setFillColor(sf::Color::White);
+    centerTextInButton(backFromSkinsText, backFromSkinsButton);
 }
 
 void SnakeGame::centerTextInButton(sf::Text& text, const sf::RectangleShape& button) {
@@ -418,6 +509,10 @@ void SnakeGame::processEvents() {
                     clickSound.play();
                     state = GameState::Settings;
                 }
+                else if (skinsButton.getGlobalBounds().contains(mousePos)) {  // Dodaj tę linię
+                    clickSound.play();
+                    state = GameState::SkinsSelection;
+                }
                 else if (exitButton.getGlobalBounds().contains(mousePos)) {
                     window.close();
                 }
@@ -464,6 +559,32 @@ void SnakeGame::processEvents() {
                     centerTextInButton(muteText, muteButton); // Odśwież tekst
                 }
                 else if (backFromSettingsButton.getGlobalBounds().contains(mousePos)) {
+                    clickSound.play();
+                    state = GameState::Menu;
+                }
+            }
+            else if (state == GameState::SkinsSelection) {
+                if (skin1Button.getGlobalBounds().contains(mousePos) && isSkinUnlocked(0)) {
+                    clickSound.play();
+                    currentSkinId = 0;
+                    loadSkinTextures(0);
+                }
+                else if (skin2Button.getGlobalBounds().contains(mousePos) && isSkinUnlocked(1)) {
+                    clickSound.play();
+                    currentSkinId = 1;
+                    loadSkinTextures(1);
+                }
+                else if (skin3Button.getGlobalBounds().contains(mousePos) && isSkinUnlocked(2)) {
+                    clickSound.play();
+                    currentSkinId = 2;
+                    loadSkinTextures(2);
+                }
+                else if (skin4Button.getGlobalBounds().contains(mousePos) && isSkinUnlocked(3)) {
+                    clickSound.play();
+                    currentSkinId = 3;
+                    loadSkinTextures(3);
+                }
+                else if (backFromSkinsButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     state = GameState::Menu;
                 }
@@ -564,9 +685,18 @@ void SnakeGame::draw() {
         window.draw(overlay);
     }
 
+    if (state == GameState::Playing) {
+        sf::RectangleShape textBg(sf::Vector2f(400, offsetY - 10));
+        textBg.setFillColor(sf::Color(0, 0, 0, 120));
+        textBg.setPosition(5, 5);
+        window.draw(textBg);
+    }
+
+
+    
+
     //czensci wenza
     if (state == GameState::Playing){
-        // W sekcji rysowania węża, zastąp całą pętlę for:
     for (size_t i = 0; i < snake.size(); ++i) {
     const auto& segment = snake[i];
     sf::Vector2f position(segment.x * size, segment.y * size + offsetY);
@@ -652,6 +782,8 @@ void SnakeGame::draw() {
         window.draw(startButton);
         window.draw(startText);
         window.draw(settingsButton);
+        window.draw(skinsButton);
+        window.draw(skinsText);
         window.draw(settingsText);
         window.draw(exitButton);
         window.draw(exitText);
@@ -675,6 +807,43 @@ void SnakeGame::draw() {
         window.draw(mediumBoardText);
         window.draw(largeBoardButton);
         window.draw(largeBoardText);
+    }
+    else if (state == GameState::SkinsSelection) {
+        // Rysuj guziki z odpowiednimi kolorami (zablokowane/odblokowane)
+        if (isSkinUnlocked(0)) {
+            skin1Button.setFillColor(sf::Color::Green);
+        } else {
+            skin1Button.setFillColor(sf::Color::Red);
+        }
+        window.draw(skin1Button);
+        window.draw(skin1Text);
+        
+        if (isSkinUnlocked(1)) {
+            skin2Button.setFillColor(sf::Color::Green);
+        } else {
+            skin2Button.setFillColor(sf::Color::Red);
+        }
+        window.draw(skin2Button);
+        window.draw(skin2Text);
+        
+        if (isSkinUnlocked(2)) {
+            skin3Button.setFillColor(sf::Color::Green);
+        } else {
+            skin3Button.setFillColor(sf::Color::Red);
+        }
+        window.draw(skin3Button);
+        window.draw(skin3Text);
+        
+        if (isSkinUnlocked(3)) {
+            skin4Button.setFillColor(sf::Color::Green);
+        } else {
+            skin4Button.setFillColor(sf::Color::Red);
+        }
+        window.draw(skin4Button);
+        window.draw(skin4Text);
+        
+        window.draw(backFromSkinsButton);
+        window.draw(backFromSkinsText);
     }
 
     //napis score i highscore razem z wynikami
@@ -742,9 +911,6 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     width = cols * size;
     height = rows * size + offsetY;
     
-    // Aktualizuj okno bez zmiany jego rozmiaru
-    // window.create(sf::VideoMode(width, height), "Snake");
-    
     // Przeładuj sprite'y dla nowego rozmiaru
     setupSprites();
     
@@ -773,4 +939,49 @@ int SnakeGame::getSegmentDirection(size_t index) const {
     if (previous.y > current.y) return 0; // w górę
     
     return -1;
+}
+
+void SnakeGame::loadSkinsModule() {
+    skinsModule = LoadLibrary("SnakeSkinsManager.dll");
+    if (skinsModule) {
+        isClassicUnlocked = (IsClassicUnlockedFunc)GetProcAddress(skinsModule, "isClassicSkinUnlocked");
+        isGoldenUnlocked = (IsGoldenUnlockedFunc)GetProcAddress(skinsModule, "isGoldenSkinUnlocked");
+        isRainbowUnlocked = (IsRainbowUnlockedFunc)GetProcAddress(skinsModule, "isRainbowSkinUnlocked");
+        isLegendaryUnlocked = (IsLegendaryUnlockedFunc)GetProcAddress(skinsModule, "isLegendarySkinUnlocked");
+        getSkinName = (GetSkinNameFunc)GetProcAddress(skinsModule, "getSkinName");
+        getRequiredScore = (GetRequiredScoreFunc)GetProcAddress(skinsModule, "getRequiredScore");
+    }
+}
+
+void SnakeGame::unloadSkinsModule() {
+    if (skinsModule) {
+        FreeLibrary(skinsModule);
+    }
+}
+
+bool SnakeGame::isSkinUnlocked(int skinId) {
+    if (!skinsModule) return skinId == 0;
+    
+    switch (skinId) {
+        case 0: return isClassicUnlocked ? isClassicUnlocked(highScore) : true;
+        case 1: return isGoldenUnlocked ? isGoldenUnlocked(highScore) : false;
+        case 2: return isRainbowUnlocked ? isRainbowUnlocked(highScore) : false;
+        case 3: return isLegendaryUnlocked ? isLegendaryUnlocked(highScore) : false;
+        default: return false;
+    }
+}
+
+void SnakeGame::loadSkinTextures(int skinId) {
+    std::string skinFolder = "textures/skins/skin" + std::to_string(skinId) + "/";
+    
+    // Ładuj tekstury dla wybranej skórki
+    snakeHeadUpTexture.loadFromFile(skinFolder + "snake_head_up.png");
+    snakeHeadDownTexture.loadFromFile(skinFolder + "snake_head_down.png");
+    // itd...
+    
+    setupSprites(); // Ponownie skonfiguruj sprite'y
+}
+
+SnakeGame::~SnakeGame() {
+    unloadSkinsModule();
 }

@@ -7,11 +7,13 @@
 #include <SFML/Audio.hpp>
 #include <vector>
 #include <iostream>
+#include <windows.h>
 #include "SnakeSegment.hpp"
 
 class SnakeGame {
 public:
     SnakeGame();
+    ~SnakeGame();
     void run();
 
 private:
@@ -29,10 +31,32 @@ private:
     void setupButtons();
     void centerTextInButton(sf::Text& text, const sf::RectangleShape& button);
     int getSegmentDirection(size_t index) const;
+    void loadSkinsModule();
+    void unloadSkinsModule();
+    bool isSkinUnlocked(int skinId);
+    void loadSkinTextures(int skinId);
     
     // Nowe funkcje do obsługi tekstur
     void loadTextures();
     void setupSprites();
+
+    void setupSkinsSelectionButtons();
+    void drawSkinsSelection();
+
+
+    typedef bool (*IsClassicUnlockedFunc)(int);
+    typedef bool (*IsGoldenUnlockedFunc)(int);
+    typedef bool (*IsRainbowUnlockedFunc)(int);
+    typedef bool (*IsLegendaryUnlockedFunc)(int);
+    typedef const char* (*GetSkinNameFunc)(int);
+    typedef int (*GetRequiredScoreFunc)(int);
+
+    IsClassicUnlockedFunc isClassicUnlocked;
+    IsGoldenUnlockedFunc isGoldenUnlocked;
+    IsRainbowUnlockedFunc isRainbowUnlocked;
+    IsLegendaryUnlockedFunc isLegendaryUnlocked;
+    GetSkinNameFunc getSkinName;
+    GetRequiredScoreFunc getRequiredScore;
 
 private:
     int width = 800;
@@ -44,6 +68,9 @@ private:
 
     int cols = 40;
     int rows = 30;
+
+    HMODULE skinsModule;
+    int currentSkinId;
     
     int highScore;
     sf::Text highScoreText;
@@ -63,6 +90,7 @@ private:
         Settings,
         BoardSizeSelection,
         Playing,  
+        SkinsSelection,
         GameOver
     };
     GameState state;
@@ -122,6 +150,13 @@ private:
     sf::Texture gridCellTexture;
     sf::Sprite gridCellSprite;
     bool hasGridCellTexture;
+
+    sf::RectangleShape skinsButton;
+    sf::Text skinsText;
+    sf::RectangleShape skin1Button, skin2Button, skin3Button, skin4Button;
+    sf::Text skin1Text, skin2Text, skin3Text, skin4Text;
+    sf::RectangleShape backFromSkinsButton;
+    sf::Text backFromSkinsText;
 
 };
 

@@ -9,14 +9,14 @@
         "main.cpp",
         "SnakeGame.cpp",
         "SnakeSegment.cpp",
-        "-o",
-        "snake.exe",
         "-IC:/msys64/mingw64/include",
         "-LC:/msys64/mingw64/lib",
         "-lsfml-graphics",
         "-lsfml-window",
         "-lsfml-system",
         "-lsfml-audio",
+        "-o",
+        "snake.exe",
         "-mwindows"
       ],
       "group": {
