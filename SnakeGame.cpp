@@ -10,7 +10,6 @@
 #include <fstream>
 
 SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), direction(1), gameOver(false) {
-    window.setFramerateLimit(10);
     snake.push_back(SnakeSegment(10, 10));
     spawnFood();
 
@@ -20,16 +19,21 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     if (!font.loadFromFile("arial.ttf")) {
     }
 
+    //skin loading
+    skinId = 0;
     currentSkinId = 0;
     loadSkinsModule();
 
+    //zmienne potrzebne do plansz
     maxRows = (height - offsetY) / size;
     cols = width / size;
     rows = maxRows;
 
+    //highscore
     highScore = 0;
     loadHighScore();
 
+    //usprawnienia
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60);
 
@@ -44,6 +48,18 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     eatSound.setBuffer(eatBuffer);
     deathSound.setBuffer(deathBuffer);
     clickSound.setBuffer(clickBuffer);
+
+    // Muzyka w tle
+    musicLoaded = false;
+    if (menuMusic.openFromFile("sounds/menu_music.ogg") && 
+        gameMusic.openFromFile("sounds/game_music.ogg")) {
+        musicLoaded = true;
+        menuMusic.setLoop(true);
+        gameMusic.setLoop(true);
+        menuMusic.setVolume(30); // Cichsza muzyka żeby nie zagłuszała efektów
+        gameMusic.setVolume(30);
+        menuMusic.play(); // Zacznij od muzyki menu
+    }
 
     // teksty od high score -> exit i restart
     highScoreText.setFont(font);
@@ -172,6 +188,7 @@ void SnakeGame::setupSprites() {
     }
 }
 
+//guziki
 void SnakeGame::setupButtons() {
     // Oblicz środek okna
     float centerX = width / 2.0f;
@@ -180,7 +197,7 @@ void SnakeGame::setupButtons() {
     // Menu główne - 4 przyciski (Start, Settings, Skins, Exit)
     float buttonSpacing = 65.0f; // Odstęp między przyciskami
     float totalHeight = 3 * buttonSpacing; // Wysokość dla 4 przycisków
-    float startY = centerY - (totalHeight / 2.0f);
+    float startY = centerY - (totalHeight / 2.0f); 
     
     //startbutton
     startButton.setSize({200, 50});
@@ -269,7 +286,6 @@ void SnakeGame::setupButtons() {
     backFromSettingsText.setFillColor(sf::Color::White);
     centerTextInButton(backFromSettingsText, backFromSettingsButton);
 
-    // Pozostałe przyciski bez zmian...
     //restartbutton
     restartButton.setSize({200, 50});
     if (hasButtonTexture) {
@@ -346,7 +362,7 @@ void SnakeGame::setupButtons() {
     volumeText.setFillColor(sf::Color::White);
     volumeText.setPosition(centerX - 50, centerY - 50);
 
-    // Guziki dla wyboru skórek
+    //skin 1 button
     skin1Button.setSize({180, 50});
     if (hasButtonTexture) {
         skin1Button.setTexture(&buttonTexture);
@@ -360,6 +376,7 @@ void SnakeGame::setupButtons() {
     skin1Text.setFillColor(sf::Color::White);
     centerTextInButton(skin1Text, skin1Button);
 
+    //skin 2 button
     skin2Button.setSize({180, 50});
     if (hasButtonTexture) {
         skin2Button.setTexture(&buttonTexture);
@@ -373,6 +390,7 @@ void SnakeGame::setupButtons() {
     skin2Text.setFillColor(sf::Color::White);
     centerTextInButton(skin2Text, skin2Button);
 
+    //skin 3 button
     skin3Button.setSize({180, 50});
     if (hasButtonTexture) {
         skin3Button.setTexture(&buttonTexture);
@@ -386,6 +404,7 @@ void SnakeGame::setupButtons() {
     skin3Text.setFillColor(sf::Color::White);
     centerTextInButton(skin3Text, skin3Button);
 
+    //skin 4 button
     skin4Button.setSize({180, 50});
     if (hasButtonTexture) {
         skin4Button.setTexture(&buttonTexture);
@@ -399,6 +418,7 @@ void SnakeGame::setupButtons() {
     skin4Text.setFillColor(sf::Color::White);
     centerTextInButton(skin4Text, skin4Button);
 
+    //back from skins to menu button
     backFromSkinsButton.setSize({200, 50});
     if (hasButtonTexture) {
         backFromSkinsButton.setTexture(&buttonTexture);
@@ -413,6 +433,7 @@ void SnakeGame::setupButtons() {
     centerTextInButton(backFromSkinsText, backFromSkinsButton);
 }
 
+//funkcja centrujaca teksty do guzikow
 void SnakeGame::centerTextInButton(sf::Text& text, const sf::RectangleShape& button) {
     sf::FloatRect textBounds = text.getLocalBounds();
     sf::Vector2f buttonCenter = button.getPosition() + button.getSize() / 2.f;
@@ -500,16 +521,20 @@ void SnakeGame::processEvents() {
         if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y));
 
-            if (state == GameState::Menu) {
+            if (state == GameState::Menu) { //guziki w menu
                 if (startButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
+                    if (musicLoaded) {
+                        menuMusic.stop();
+                        gameMusic.play();
+                    }
                     state = GameState::BoardSizeSelection;
                 }
                 else if (settingsButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     state = GameState::Settings;
                 }
-                else if (skinsButton.getGlobalBounds().contains(mousePos)) {  // Dodaj tę linię
+                else if (skinsButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     state = GameState::SkinsSelection;
                 }
@@ -517,7 +542,7 @@ void SnakeGame::processEvents() {
                     window.close();
                 }
             }
-            else if (state == GameState::GameOver) {
+            else if (state == GameState::GameOver) { //guziki po przegranej
                 if (restartButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     resetGame();
@@ -525,11 +550,14 @@ void SnakeGame::processEvents() {
                 }
                 else if (backToMenuButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
+                    if (musicLoaded) {
+                        gameMusic.stop();
+                        menuMusic.play();
+                    }
                     state = GameState::Menu;
                 }
             }
-            
-            else if(state == GameState::BoardSizeSelection){
+            else if(state == GameState::BoardSizeSelection){ //guziki przy wyborze rozmiaru planszy
                 if(smallBoardButton.getGlobalBounds().contains(mousePos)){
                     clickSound.play();
                     setBoardSize(20, 15);
@@ -546,24 +574,28 @@ void SnakeGame::processEvents() {
                     state = GameState::Playing;
                 }
             }
-            else if (state == GameState::Settings) {
+            else if (state == GameState::Settings) { // ustawienia - guzik od wylaczania i wlaczania dzwieku
                 if (muteButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     isMuted = !isMuted;
-                    // Ustaw głośność na 0% lub 100%
                     float volume = isMuted ? 0.0f : 100.0f;
+                    float musicVolume = isMuted ? 0.0f : 30.0f; // Muzyka zawsze cichsza
                     eatSound.setVolume(volume);
                     deathSound.setVolume(volume); 
                     clickSound.setVolume(volume);
-                    muteText.setString(isMuted ? "Dźwięk: OFF" : "Dźwięk: ON");
-                    centerTextInButton(muteText, muteButton); // Odśwież tekst
+                    if (musicLoaded) {
+                        menuMusic.setVolume(musicVolume);
+                        gameMusic.setVolume(musicVolume);
+                    }
+                    muteText.setString(isMuted ? "Dzwiek: OFF" : "Dzwiek: ON");
+                    centerTextInButton(muteText, muteButton); // odswiez guzik
                 }
                 else if (backFromSettingsButton.getGlobalBounds().contains(mousePos)) {
                     clickSound.play();
                     state = GameState::Menu;
                 }
             }
-            else if (state == GameState::SkinsSelection) {
+            else if (state == GameState::SkinsSelection) { // guziki wyboru skorek
                 if (skin1Button.getGlobalBounds().contains(mousePos) && isSkinUnlocked(0)) {
                     clickSound.play();
                     currentSkinId = 0;
@@ -642,12 +674,12 @@ void SnakeGame::update() {
     }
 }
 
-//rysowanie menu i gry
+// rysowanie / gui gry menu i wszystkiego
 void SnakeGame::draw() {
     //glowne okno - tło
     window.clear(sf::Color::Black);
 
-
+    // tło
     if (hasGridCellTexture) {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
@@ -678,7 +710,7 @@ void SnakeGame::draw() {
         topBar.setFillColor(sf::Color(50, 50, 50));
         window.draw(topBar);
     }
-
+    //przyciemnione prostokaty dla widocznosci
     if (state != GameState::Playing) {
         sf::RectangleShape overlay(sf::Vector2f(width, height));
         overlay.setFillColor(sf::Color(0, 0, 0, 150)); // Czarny z 60% przezroczystością
@@ -777,8 +809,7 @@ void SnakeGame::draw() {
         }
     }
 
-    //menu i menu po smierci
-    if (state == GameState::Menu) {
+    if (state == GameState::Menu) { //menu glowne
         window.draw(startButton);
         window.draw(startText);
         window.draw(settingsButton);
@@ -788,19 +819,19 @@ void SnakeGame::draw() {
         window.draw(exitButton);
         window.draw(exitText);
     }
-    else if (state == GameState::Settings) {
+    else if (state == GameState::Settings) { //ustawienia
         window.draw(muteButton);
         window.draw(muteText);
         window.draw(backFromSettingsButton);
         window.draw(backFromSettingsText);
     }
-    else if (state == GameState::GameOver) {
+    else if (state == GameState::GameOver) { //menu po smiertne
         window.draw(restartButton);
         window.draw(restartText);
         window.draw(backToMenuButton);
         window.draw(backToMenuText);
     }
-    else if (state == GameState::BoardSizeSelection) {
+    else if (state == GameState::BoardSizeSelection) { //menu wyboru planszy
         window.draw(smallBoardButton);
         window.draw(smallBoardText);
         window.draw(mediumBoardButton);
@@ -808,7 +839,7 @@ void SnakeGame::draw() {
         window.draw(largeBoardButton);
         window.draw(largeBoardText);
     }
-    else if (state == GameState::SkinsSelection) {
+    else if (state == GameState::SkinsSelection) { //menu wyboru skorek
         // Rysuj guziki z odpowiednimi kolorami (zablokowane/odblokowane)
         if (isSkinUnlocked(0)) {
             skin1Button.setFillColor(sf::Color::Green);
@@ -905,6 +936,7 @@ bool SnakeGame::checkCollision() {
     return false;
 }
 
+//funkcja odpowiadajaca za wybor rozmiaru planszy
 void SnakeGame::setBoardSize(int newCols, int newRows) {
     cols = newCols;
     rows = newRows;
@@ -921,6 +953,7 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     resetGame();
 }       
 
+//funkcja odpowiadajaca za dowiedzenie sie w jaka strone idzie waz
 int SnakeGame::getSegmentDirection(size_t index) const {
     if (index >= snake.size()) return -1;
     
@@ -941,6 +974,7 @@ int SnakeGame::getSegmentDirection(size_t index) const {
     return -1;
 }
 
+//funkcja odpowiadajaca za ladowanie modulu skorek
 void SnakeGame::loadSkinsModule() {
     skinsModule = LoadLibrary("SnakeSkinsManager.dll");
     if (skinsModule) {
@@ -953,12 +987,14 @@ void SnakeGame::loadSkinsModule() {
     }
 }
 
+//odladowywanie skorek
 void SnakeGame::unloadSkinsModule() {
     if (skinsModule) {
         FreeLibrary(skinsModule);
     }
 }
 
+//sprawdzanie czy skorka jest odblokowana
 bool SnakeGame::isSkinUnlocked(int skinId) {
     if (!skinsModule) return skinId == 0;
     
@@ -971,17 +1007,68 @@ bool SnakeGame::isSkinUnlocked(int skinId) {
     }
 }
 
+//ladownaie skorek w zaleznosci od wyboru
 void SnakeGame::loadSkinTextures(int skinId) {
     std::string skinFolder = "textures/skins/skin" + std::to_string(skinId) + "/";
     
-    // Ładuj tekstury dla wybranej skórki
-    snakeHeadUpTexture.loadFromFile(skinFolder + "snake_head_up.png");
-    snakeHeadDownTexture.loadFromFile(skinFolder + "snake_head_down.png");
-    // itd...
+    // Reset flag
+    hasSnakeHeadTextures = false;
+    hasSnakeBodyTextures = false;
+    hasSnakeCornerTextures = false;
     
-    setupSprites(); // Ponownie skonfiguruj sprite'y
+    // Ładuj wszystkie tekstury głowy
+    hasSnakeHeadTextures = 
+        snakeHeadUpTexture.loadFromFile(skinFolder + "snake_head_up.png") &&
+        snakeHeadDownTexture.loadFromFile(skinFolder + "snake_head_down.png") &&
+        snakeHeadLeftTexture.loadFromFile(skinFolder + "snake_head_left.png") &&
+        snakeHeadRightTexture.loadFromFile(skinFolder + "snake_head_right.png");
+
+    // Ładuj tekstury ciała
+    hasSnakeBodyTextures =
+        snakeBodyHorizontalTexture.loadFromFile(skinFolder + "snake_body_horizontal.png") &&
+        snakeBodyVerticalTexture.loadFromFile(skinFolder + "snake_body_vertical.png");
+
+    // Ładuj tekstury zakrętów
+    hasSnakeCornerTextures =
+        snakeCornerUpLeftTexture.loadFromFile(skinFolder + "snake_corner_up_left.png") &&
+        snakeCornerUpRightTexture.loadFromFile(skinFolder + "snake_corner_up_right.png") &&
+        snakeCornerDownLeftTexture.loadFromFile(skinFolder + "snake_corner_down_left.png") &&
+        snakeCornerDownRightTexture.loadFromFile(skinFolder + "snake_corner_down_right.png");
+    
+    // Ponownie skonfiguruj sprite'y z nowymi teksturami
+    setupSprites();
 }
 
+
 SnakeGame::~SnakeGame() {
+    if (musicLoaded) {
+        menuMusic.stop();
+        gameMusic.stop();
+    }
     unloadSkinsModule();
+
+}
+
+//zapis wyboru skorki
+void SnakeGame::saveSkinSelection() {
+    std::ofstream file("skin.txt");
+    if (file.is_open()) {
+        file << currentSkinId;
+        file.close();
+    }
+}
+
+//zaladowanie wybranej skorki
+void SnakeGame::loadSkinSelection() {
+    std::ifstream file("skin.txt");
+    if (file.is_open()) {
+        file >> currentSkinId;
+        file.close();
+        if (isSkinUnlocked(currentSkinId)) {
+            loadSkinTextures(currentSkinId);
+        } else {
+            currentSkinId = 0;
+            loadSkinTextures(0);
+        }
+    }
 }
