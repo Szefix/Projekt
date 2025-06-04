@@ -8,17 +8,38 @@
 #include <cstdlib>
 #include <string>
 #include <fstream>
+#include <stdexcept>
 
 SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), direction(1), gameOver(false) {
-    snake.push_back(SnakeSegment(10, 10));
-    spawnFood();
-
-    //score i highscore
-    score = 0;
-    directionChanged = false;
-    if (!font.loadFromFile("arial.ttf")) {
+    
+      try {
+        snake.push_back(SnakeSegment(10, 10));
+        spawnFood();
+        
+        if (!font.loadFromFile("arial.ttf")) {
+            throw std::runtime_error("Nie można załadować czcionki arial.ttf");
+        }
+        
+        loadTextures();
+        setupSprites();
+        setupButtons();
+        
+        // Dźwięki
+        if (!eatBuffer.loadFromFile("sounds/eat.wav"))
+            throw std::runtime_error("Nie można załadować eat.wav");
+        if (!deathBuffer.loadFromFile("sounds/death.wav"))
+            throw std::runtime_error("Nie można załadować death.wav");
+        if (!clickBuffer.loadFromFile("sounds/click.wav"))
+            throw std::runtime_error("Nie można załadować click.wav");
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Błąd inicjalizacji gry: " << e.what() << std::endl;
     }
 
+    
+    //score
+    score = 0;
+   
     //skin loading
     skinId = 0;
     currentSkinId = 0;
@@ -38,13 +59,6 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
     window.setFramerateLimit(60);
 
     //dzwieki 
-    if (!eatBuffer.loadFromFile("sounds/eat.wav"))
-        std::cerr << "Nie mogę załadować eat.wav\n";
-    if (!deathBuffer.loadFromFile("sounds/death.wav"))
-        std::cerr << "Nie mogę załadować death.wav\n";
-    if (!clickBuffer.loadFromFile("sounds/click.wav"))
-        std::cerr << "Nie mogę załadować click.wav\n";
-
     eatSound.setBuffer(eatBuffer);
     deathSound.setBuffer(deathBuffer);
     clickSound.setBuffer(clickBuffer);
@@ -467,11 +481,19 @@ void SnakeGame::run() {
 
 //wczytaj highscore z pliku
 void SnakeGame::loadHighScore() {
-    std::ifstream file("highscore.txt");
-    if (file.is_open()) {
-        file >> highScore;
-        file.close();
-    } else {
+    try {
+        std::ifstream file("highscore.txt");
+        if (file.is_open()) {
+            file >> highScore;
+            if (file.fail()) {
+                throw std::runtime_error("Błędny format pliku highscore.txt");
+            }
+            file.close();
+        } else {
+            highScore = 0;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Błąd wczytywania high score: " << e.what() << std::endl;
         highScore = 0;
     }
 }
@@ -951,6 +973,10 @@ void SnakeGame::setBoardSize(int newCols, int newRows) {
     
     // Zresetuj grę z nowymi wymiarami
     resetGame();
+
+    window.create(sf::VideoMode(width, height), "Snake");
+    window.setFramerateLimit(60);
+    window.setVerticalSyncEnabled(true);
 }       
 
 //funkcja odpowiadajaca za dowiedzenie sie w jaka strone idzie waz
@@ -1072,3 +1098,5 @@ void SnakeGame::loadSkinSelection() {
         }
     }
 }
+
+

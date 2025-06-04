@@ -64,7 +64,6 @@ private:
     void setupSprites();
      //dodaj sprawdzanie flag przed ustawianiem tekstur
 
-
     typedef bool (*IsClassicUnlockedFunc)(int); //bool czy odblokowane
     typedef bool (*IsGoldenUnlockedFunc)(int);
     typedef bool (*IsRainbowUnlockedFunc)(int);
