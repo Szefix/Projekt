@@ -108,20 +108,20 @@ void SnakeGame::loadTextures() {
 
     // Zaladuje tekstury wensza
     hasSnakeHeadTextures = 
-        snakeHeadUpTexture.loadFromFile("textures/snake_head_up.png") &&
-        snakeHeadDownTexture.loadFromFile("textures/snake_head_down.png") &&
-        snakeHeadLeftTexture.loadFromFile("textures/snake_head_left.png") &&
-        snakeHeadRightTexture.loadFromFile("textures/snake_head_right.png");
+        snakeHeadUpTexture.loadFromFile("textures/skins/skin0/snake_head_up.png") &&
+        snakeHeadDownTexture.loadFromFile("textures/skins/skin0/snake_head_down.png") &&
+        snakeHeadLeftTexture.loadFromFile("textures/skins/skin0/snake_head_left.png") &&
+        snakeHeadRightTexture.loadFromFile("textures/skins/skin0/snake_head_right.png");
 
     hasSnakeBodyTextures =
-        snakeBodyHorizontalTexture.loadFromFile("textures/snake_body_horizontal.png") &&
-        snakeBodyVerticalTexture.loadFromFile("textures/snake_body_vertical.png");
+        snakeBodyHorizontalTexture.loadFromFile("textures/skins/skin0/snake_body_horizontal.png") &&
+        snakeBodyVerticalTexture.loadFromFile("textures/skins/skin0/snake_body_vertical.png");
 
     hasSnakeCornerTextures =
-        snakeCornerUpLeftTexture.loadFromFile("textures/snake_corner_up_left.png") &&
-        snakeCornerUpRightTexture.loadFromFile("textures/snake_corner_up_right.png") &&
-        snakeCornerDownLeftTexture.loadFromFile("textures/snake_corner_down_left.png") &&
-        snakeCornerDownRightTexture.loadFromFile("textures/snake_corner_down_right.png");
+        snakeCornerUpLeftTexture.loadFromFile("textures/skins/skin0/snake_corner_up_left.png") &&
+        snakeCornerUpRightTexture.loadFromFile("textures/skins/skin0/snake_corner_up_right.png") &&
+        snakeCornerDownLeftTexture.loadFromFile("textures/skins/skin0/snake_corner_down_left.png") &&
+        snakeCornerDownRightTexture.loadFromFile("textures/skins/skin0/snake_corner_down_right.png");
 }
 
 //dodaj sprawdzanie flag przed ustawianiem tekstur
