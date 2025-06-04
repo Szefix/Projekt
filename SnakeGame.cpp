@@ -71,7 +71,7 @@ SnakeGame::SnakeGame() : window(sf::VideoMode(width, height), "Snake"), directio
         menuMusic.setLoop(true);
         gameMusic.setLoop(true);
         menuMusic.setVolume(30); // Cichsza muzyka żeby nie zagłuszała efektów
-        gameMusic.setVolume(30);
+        gameMusic.setVolume(35);
         menuMusic.play(); // Zacznij od muzyki menu
     }
 
